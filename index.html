@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Penny – a private budget app for Windows</title>
+<meta name="description" content="Write what you spent the way you'd say it. Penny reads your bank statements, keeps every number on your PC, and tells you what's safe to spend today. Free during the beta.">
+<meta property="og:title" content="Penny – every cent, in focus">
+<meta property="og:description" content="A private budget app for Windows. No account, no bank login, no cloud.">
+<meta property="og:image" content="https://abdallhhelles.github.io/Penny/img/og.jpg">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://abdallhhelles.github.io/Penny/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#10201D">
+<link rel="canonical" href="https://abdallhhelles.github.io/Penny/">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Penny","alternateName":"Penny – Budget & Money Tracker","applicationCategory":"FinanceApplication","operatingSystem":"Windows 10, Windows 11",
+ "description":"A private budget app for Windows. Type what you spent in plain words, import bank statements, and keep every number encrypted on your own PC.",
+ "url":"https://abdallhhelles.github.io/Penny/","downloadUrl":"https://github.com/abdallhhelles/Penny/releases/latest","softwareVersion":"1.0.8",
+ "inLanguage":["en","es","zh-Hans","hi","ar"],"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"publisher":{"@type":"Organization","name":"Akrot Software"}}
+</script>
+<link rel="icon" type="image/svg+xml" href="img/penny-mark.svg">
+<link rel="apple-touch-icon" href="img/icon-180.png">
+<link rel="preload" href="fonts/sora-latin.woff2" as="font" type="font/woff2" crossorigin>
+<script>/* reveal-on-scroll only when scripts run; if they fail, everything shows after a moment */
+document.documentElement.classList.add('js');setTimeout(()=>{if(!window.__rvReady)document.querySelectorAll('.rv').forEach(e=>e.classList.add('in'))},3000);</script>
+<style>
+@font-face{font-family:'Sora';src:url('fonts/sora-latin.woff2') format('woff2');font-weight:100 800;font-display:swap;
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+FEFF,U+FFFD}
+@font-face{font-family:'Sora';src:url('fonts/sora-latin-ext.woff2') format('woff2');font-weight:100 800;font-display:swap;
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1EFF,U+20A0-20C0,U+2C60-2C7F,U+A720-A7FF}
+
+:root{
+  --ever:#10201D;      /* evergreen night (the app's dark theme) */
+  --fir:#1A2E2A;       /* raised evergreen */
+  --moss:#2C4540;      /* lines on evergreen */
+  --paper:#FBF6EF;     /* receipt paper */
+  --sand:#F1E8DB;      /* paper shade */
+  --rule:#E3D8C8;      /* lines on paper */
+  --ink:#14211F;
+  --muted:#5B6664;
+  --sage:#A9B8B4;
+  --copper:#C9632F;
+  --copper-dk:#B5532A;
+  --copper-hi:#EE9A5C;
+  --slice:#2BB89A;
+  --greenbar:#DDEBDD;  /* the bank printout's green bands */
+  --red:#D9574A;
+  --font:'Sora',"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:"Cascadia Mono","Consolas","SF Mono","Menlo",ui-monospace,monospace;
+  --wrap:1200px;
+  --gut:clamp(20px,5vw,64px);
+  --sect:clamp(88px,11vw,152px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:84px}
+body{font-family:var(--font);background:var(--ever);color:var(--paper);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+img,svg{display:block}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--copper-hi);outline-offset:3px;border-radius:8px}
+.wrap{width:100%;max-width:calc(var(--wrap) + 2*var(--gut));margin:0 auto;padding:0 var(--gut)}
+.num{font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ---------- type scale (major third on 17px) ---------- */
+h1,h2{font-weight:700;letter-spacing:-.042em;line-height:1.02;text-wrap:balance}
+h1{font-size:clamp(42px,5.6vw,80px)}
+h2{font-size:clamp(34px,4.3vw,58px);max-width:15ch}
+.sub{margin-top:20px;font-size:clamp(17px,1.45vw,20px);line-height:1.55;max-width:34em;text-wrap:pretty}
+
+/* ---------- top bar ---------- */
+.bar{position:sticky;top:0;z-index:30;background:rgba(16,32,29,.86);backdrop-filter:saturate(1.2) blur(16px);-webkit-backdrop-filter:saturate(1.2) blur(16px);box-shadow:0 1px 0 transparent;transition:box-shadow .3s}
+.bar.scrolled{box-shadow:0 1px 0 var(--moss)}
+.bar .wrap{display:flex;align-items:center;gap:28px;height:72px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:700;font-size:24px;letter-spacing:-.04em}
+.brand svg{width:30px;height:30px}
+.bar nav{margin-left:auto;display:flex;gap:28px;font-size:15px;color:var(--sage)}
+.bar nav a{text-decoration:none;padding:6px 0}.bar nav a:hover{color:var(--paper)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:50px;padding:0 24px;border-radius:999px;border:0;font-weight:600;font-size:16px;letter-spacing:-.01em;text-decoration:none;cursor:pointer;white-space:nowrap;transition:transform .15s,background-color .2s,box-shadow .2s}
+.btn:active{transform:scale(.97)}
+.btn svg{width:18px;height:18px;flex:none}
+.btn.copper{background:var(--copper);color:#fff}.btn.copper:hover{background:var(--copper-dk)}
+.btn.ghost{background:transparent;color:var(--paper);box-shadow:inset 0 0 0 1.5px var(--moss)}.btn.ghost:hover{box-shadow:inset 0 0 0 1.5px var(--sage)}
+.btn.sm{height:42px;padding:0 20px;font-size:15px}
+@media(max-width:820px){.bar nav{display:none}.bar .btn{margin-left:auto}}
+
+/* =====================================================================
+   HERO — say it, and the receipt prints
+   ===================================================================== */
+.hero{position:relative;padding:clamp(40px,6vw,88px) 0 clamp(96px,10vw,140px)}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,400px);gap:clamp(36px,5vw,72px);align-items:start}
+.hero h1{font-size:clamp(40px,4.15vw,62px);line-height:1.04}
+.hero h1 .l1,.hero h1 .l2{display:block;white-space:nowrap}
+.hero h1 .l2{color:var(--sage);font-weight:500}
+@media(max-width:960px){.hero h1{font-size:clamp(40px,8.4vw,64px)}}
+@media(max-width:520px){.hero h1 .l1,.hero h1 .l2{white-space:normal}}
+.hero .sub{color:var(--sage);margin-top:24px;max-width:31em}
+
+.say{margin-top:36px;max-width:620px}
+.say form{display:flex;align-items:center;gap:8px;padding:8px;background:var(--fir);border-radius:20px;box-shadow:inset 0 0 0 1px var(--moss);transition:box-shadow .2s}
+.say form:focus-within{box-shadow:inset 0 0 0 2px var(--copper-hi)}
+.say .ic{margin-left:12px;color:var(--copper-hi);width:22px;height:22px}
+.say input{flex:1;min-width:0;height:56px;background:transparent;border:0;padding:0 6px;font-size:19px;letter-spacing:-.01em;outline:0}
+.say input::placeholder{color:#71837F}
+.say button{flex:none;height:56px;padding:0 22px;border-radius:14px;border:0;background:var(--copper);color:#fff;font-weight:600;cursor:pointer;transition:background-color .2s}
+.say button:hover{background:var(--copper-dk)}
+.read{display:grid;grid-template-columns:repeat(4,minmax(0,auto));justify-content:start;gap:8px;margin-top:12px;min-height:60px}
+.read .k{display:flex;flex-direction:column;justify-content:center;padding:8px 14px;border-radius:12px;background:var(--fir);min-width:0}
+.read .k small{color:var(--sage);font-size:12px;line-height:1.3}
+.read .k span{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.read .k .ic{width:16px;height:16px;color:var(--copper-hi)}
+.read .hint{grid-column:1/-1;color:var(--sage);font-size:15px;align-self:center;padding:0 4px}
+.tries{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+.tries button{border:0;background:none;box-shadow:inset 0 0 0 1px var(--moss);border-radius:999px;padding:8px 14px;font-size:14px;line-height:1.2;cursor:pointer;color:var(--sage);transition:color .2s,box-shadow .2s}
+.tries button:hover{box-shadow:inset 0 0 0 1px var(--copper-hi);color:var(--paper)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:40px;align-items:center}
+.cta p{color:var(--sage);font-size:14px;flex-basis:100%;margin-top:2px}
+
+/* the till: a printer slot with a strip of paper coming out of it */
+.till{position:relative;width:100%;max-width:420px;justify-self:end;align-self:center}
+.slot{position:relative;z-index:2;height:34px;margin:0 -14px;border-radius:17px;background:linear-gradient(#08120F,#0C1916);box-shadow:inset 0 2px 8px rgba(0,0,0,.7),0 1px 0 rgba(255,255,255,.06)}
+.slot::after{content:"";position:absolute;right:20px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:var(--slice);box-shadow:0 0 10px var(--slice);opacity:.9}
+.slot.busy::after{animation:blink .25s steps(2) 4}
+@keyframes blink{50%{opacity:.2}}
+.paper{position:relative;margin:-17px 0 0;padding:44px 28px 46px;background:var(--paper);color:var(--ink);transform:rotate(-1.2deg);transform-origin:50% 0;
+  box-shadow:0 34px 60px -18px rgba(0,0,0,.55);
+  --zz:radial-gradient(circle 7.5px at 50% 100%,#0000 97%,#000) 0 0/18px 100% repeat-x;-webkit-mask:var(--zz);mask:var(--zz)}
+.paper::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.08),transparent 26px)}
+.r-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:16px;border-bottom:1.5px dashed #D3C6B3}
+.r-head b{font-size:21px;letter-spacing:-.05em;display:flex;align-items:center;gap:8px}.r-head b svg{width:22px;height:22px;align-self:center}
+.r-head span{font-size:13px;color:var(--muted)}
+.lines{list-style:none}
+.line{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:14px;align-items:center;padding:13px 0;border-bottom:1px dotted #D9CDBC}
+.line i{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--sand);color:var(--ink)}
+.line i .ic{width:18px;height:18px;stroke-width:1.8}
+.line b{display:block;font-weight:600;font-size:16px;letter-spacing:-.015em;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.line small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.line .amt{font-weight:600;font-size:16px;text-align:right}
+.line .amt.in{color:#0F7563}
+.line.new{animation:print .9s cubic-bezier(.25,.9,.3,1) both}
+@keyframes print{0%{opacity:0;clip-path:inset(0 0 100% 0)}35%{opacity:1}100%{opacity:1;clip-path:inset(0 0 0 0)}}
+.paper.feed{animation:feed .9s cubic-bezier(.25,.9,.3,1)}
+@keyframes feed{0%{translate:0 -56px}100%{translate:0 0}}
+.totals{display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:4px 16px;padding-top:18px;font-size:14px;color:var(--muted)}
+.totals .big,.totals .safe{justify-self:end;text-align:right}
+.totals .big{font-size:30px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.1}
+.totals .safe{font-weight:600;color:var(--ink);font-size:15px}
+.totals .safe.low{color:var(--red)}
+.r-note{margin-top:18px;padding-top:14px;border-top:1.5px dashed #D3C6B3;font-size:12.5px;color:var(--muted);text-align:center}
+@media(max-width:960px){.hero .wrap{grid-template-columns:minmax(0,1fr)}.till{justify-self:center;margin-top:12px}}
+@media(max-width:560px){
+  .say form{flex-wrap:wrap}.say input{flex-basis:calc(100% - 48px);height:52px;font-size:17px}.say form button{flex-basis:100%;height:50px}
+  .read{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cta .btn{flex:1 1 100%}
+  .paper{padding:40px 20px 44px}
+}
+
+/* =====================================================================
+   STATEMENTS — the bank's printout next to Penny's list
+   ===================================================================== */
+.paperband{background:var(--paper);color:var(--ink)}
+.shead{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(28px,5vw,80px);align-items:end}
+.shead h2{max-width:none}.shead .sub{margin-top:0;padding-bottom:6px}
+@media(max-width:900px){.shead{grid-template-columns:minmax(0,1fr);gap:0}.shead .sub{margin-top:20px}}
+.paperband .sub{color:var(--muted)}
+.statements{padding:var(--sect) 0}
+.compare{margin-top:clamp(48px,6vw,72px);display:grid;grid-template-columns:minmax(0,1.15fr) 88px minmax(0,1fr);align-items:stretch}
+.form{position:relative;padding:22px 34px 22px 44px;background:#fff;box-shadow:0 1px 0 var(--rule),0 18px 40px -24px rgba(20,33,31,.35);
+}
+.form::before,.form::after{content:"";position:absolute;top:0;bottom:0;width:30px;background:radial-gradient(circle 5px,var(--paper) 96%,#0000) 50% 6px/30px 26px repeat-y}
+.form::before{left:0;border-right:1px dashed #CFC5B7}.form::after{right:0;border-left:1px dashed #CFC5B7;width:22px;background-size:22px 26px}
+.form .t{display:flex;align-items:center;height:32px;font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:#6E8A73}
+.form .row:nth-child(odd){background:var(--greenbar);box-shadow:-44px 0 0 var(--greenbar),34px 0 0 var(--greenbar)}
+.form .row{height:52px;display:flex;align-items:center;justify-content:space-between;gap:16px;font-family:var(--mono);font-size:13.5px;color:#2C3B33;letter-spacing:-.01em}
+.form .row span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.form .row span:last-child{flex:none;color:#4F6655}
+.arrows{display:flex;flex-direction:column;padding-top:54px}
+.arrows i{height:52px;display:grid;place-items:center;color:#C8BBA8;transition:color .4s}
+.arrows svg{width:44px;height:14px}
+.list-clean{padding:22px 0 22px 4px}
+.list-clean .t{display:flex;align-items:center;height:32px;font-size:13px;color:var(--muted)}
+.list-clean .row{height:52px;display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:14px;align-items:center;border-bottom:1px solid var(--rule)}
+.list-clean .row:last-child{border-bottom:0}
+.list-clean i{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--sand)}
+.list-clean i .ic{width:18px;height:18px}
+.list-clean b{font-weight:600;font-size:17px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list-clean small{display:block;font-weight:400;font-size:12.5px;color:var(--muted);letter-spacing:0}
+.list-clean .amt{font-weight:600;font-size:15px}
+.list-clean .row>*{opacity:.13;filter:grayscale(1);transition:opacity .45s,filter .45s}
+.tidied .list-clean .row>*{opacity:1;filter:none}
+.tidied .arrows i{color:var(--copper)}
+.tidied .list-clean .row:nth-child(3)>*{transition-delay:.06s}.tidied .list-clean .row:nth-child(4)>*{transition-delay:.12s}.tidied .list-clean .row:nth-child(5)>*{transition-delay:.18s}
+.tidied .list-clean .row:nth-child(6)>*{transition-delay:.24s}.tidied .list-clean .row:nth-child(7)>*{transition-delay:.3s}.tidied .list-clean .row:nth-child(8)>*{transition-delay:.36s}
+.tidied .arrows i:nth-child(3){transition-delay:.06s}.tidied .arrows i:nth-child(4){transition-delay:.12s}.tidied .arrows i:nth-child(5){transition-delay:.18s}.tidied .arrows i:nth-child(6){transition-delay:.24s}.tidied .arrows i:nth-child(7){transition-delay:.3s}
+.waiting{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-weight:600;font-size:16px;color:var(--ink);transition:opacity .3s;pointer-events:none}
+.list-clean{position:relative}.tidied .waiting{opacity:0}
+.tidy-act{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px;align-items:center}
+.tidy-act .own{flex:1 1 360px;display:flex;align-items:center;gap:10px;height:50px;padding:0 6px 0 20px;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--rule)}
+.tidy-act .own:focus-within{box-shadow:inset 0 0 0 2px var(--copper)}
+.tidy-act input{flex:1;min-width:0;height:100%;border:0;background:none;outline:0;font-family:var(--mono);font-size:14px;color:var(--ink)}
+.tidy-act output{flex:none;max-width:48%;padding:7px 14px;border-radius:999px;background:var(--sand);font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tidy-act output:empty{display:none}
+.banks{margin-top:40px;font-size:15px;color:var(--muted);max-width:56em}
+.banks b{color:var(--ink);font-weight:600}
+@media(max-width:880px){
+  .compare{grid-template-columns:minmax(0,1fr)}
+  .arrows{flex-direction:row;justify-content:center;padding:14px 0}.arrows i{display:none}.arrows i:first-child{display:grid;height:auto;transform:rotate(90deg)}
+  .form{padding:20px 22px 20px 40px}.form::after{display:none}
+  .form .row:nth-child(odd){box-shadow:-40px 0 0 var(--greenbar),22px 0 0 var(--greenbar)}
+}
+
+/* =====================================================================
+   PRIVACY — one switch for the whole page
+   ===================================================================== */
+.priv{padding:var(--sect) 0}
+.priv .top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:48px;align-items:end}
+.priv .sub{color:var(--sage)}
+.switch{display:flex;align-items:center;gap:20px;background:var(--fir);border:0;padding:14px 26px 14px 14px;border-radius:999px;cursor:pointer;text-align:left;box-shadow:inset 0 0 0 1px var(--moss)}
+.switch:hover{box-shadow:inset 0 0 0 1px var(--sage)}
+.switch .track{position:relative;width:96px;height:56px;border-radius:999px;background:var(--moss);transition:background-color .3s;flex:none}
+.switch .knob{position:absolute;top:6px;left:6px;width:44px;height:44px;border-radius:50%;background:var(--paper);color:var(--ever);display:grid;place-items:center;transition:transform .35s cubic-bezier(.3,1.4,.5,1)}
+.switch .knob .ic{width:22px;height:22px}
+.switch[aria-checked=true] .track{background:var(--copper)}
+.switch[aria-checked=true] .knob{transform:translateX(40px)}
+.switch .off{display:none}.switch[aria-checked=true] .off{display:block}.switch[aria-checked=true] .on{display:none}
+.switch b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.3}
+.switch small{display:block;color:var(--sage);font-size:14px}
+.facts{margin-top:clamp(56px,7vw,88px);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--moss)}
+.facts div{padding:30px 32px 0 0}
+.facts div+div{padding-left:32px;border-left:1px solid var(--moss)}
+.facts .ic{width:26px;height:26px;color:var(--copper-hi);margin-bottom:16px}
+.facts b{display:block;font-size:19px;letter-spacing:-.02em;margin-bottom:8px}
+.facts p{color:var(--sage);font-size:16px;line-height:1.55}
+@media(max-width:900px){.priv .top{grid-template-columns:minmax(0,1fr);align-items:start}.switch{justify-self:start}
+  .facts{grid-template-columns:minmax(0,1fr)}.facts div{padding:26px 0}.facts div+div{padding-left:0;border-left:0;border-top:1px solid var(--moss)}}
+
+/* =====================================================================
+   SCREENS — the real app, in a Windows window
+   ===================================================================== */
+.screens{padding:0 0 var(--sect)}
+.screens .head{display:flex;justify-content:space-between;align-items:end;gap:24px}
+.strip-nav{display:flex;gap:10px;flex:none}
+.strip-nav button{width:50px;height:50px;border-radius:50%;border:0;background:var(--fir);cursor:pointer;display:grid;place-items:center;box-shadow:inset 0 0 0 1px var(--moss);color:var(--paper)}
+.strip-nav button:hover:not(:disabled){box-shadow:inset 0 0 0 1px var(--sage)}
+.strip-nav button:disabled{opacity:.35;cursor:default}
+.strip{margin-top:clamp(40px,5vw,64px);display:flex;gap:clamp(20px,3vw,36px);overflow-x:auto;scroll-snap-type:x mandatory;--edge:max(var(--gut),calc((100vw - var(--wrap))/2));scroll-padding-inline:var(--edge);
+  padding:8px var(--edge) 12px;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.shot{flex:0 0 min(84vw,880px);scroll-snap-align:start;margin:0}
+.win{border-radius:12px;overflow:hidden;background:#1F1F1F;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 30px 70px -20px rgba(0,0,0,.7)}
+.win .tb{height:32px;display:flex;align-items:center;gap:8px;padding:0 0 0 12px;background:#202020;color:#C8C8C8;font-size:12px;font-family:"Segoe UI",system-ui,sans-serif}
+.win .tb svg{width:14px;height:14px}
+.win .tb .ctl{margin-left:auto;display:flex}
+.win .tb .ctl span{width:44px;height:32px;display:grid;place-items:center}
+.win .tb .ctl svg{width:10px;height:10px;stroke:#C8C8C8;stroke-width:1.1;fill:none}
+.win img{width:100%;height:auto;aspect-ratio:16/9;background:var(--paper)}
+.shot figcaption{margin-top:18px;color:var(--sage);font-size:16px;max-width:38em}
+.shot figcaption b{color:var(--paper);font-weight:600}
+.dots{display:flex;gap:8px;justify-content:center;margin-top:24px}
+.dots button{width:8px;height:8px;border-radius:50%;border:0;padding:0;background:var(--moss);cursor:pointer;transition:background-color .2s,width .2s}
+.dots button[aria-current=true]{background:var(--copper-hi);width:24px;border-radius:4px}
+@media(max-width:640px){.strip-nav{display:none}.win .tb{height:24px;font-size:10px}.win .tb .ctl span{width:30px;height:24px}}
+
+/* =====================================================================
+   EVERYTHING ELSE + LANGUAGES (paper)
+   ===================================================================== */
+.more{padding:var(--sect) 0 calc(var(--sect) * .6)}
+
+.langs-s{padding:calc(var(--sect) * .4) 0 var(--sect)}
+.ltable{margin-top:clamp(36px,4.5vw,56px);width:100%;border-collapse:collapse;table-layout:fixed}
+.ltable th{text-align:left;font-weight:500;font-size:13px;color:var(--muted);padding:0 12px 12px 0;border-bottom:2px solid var(--ink)}
+.ltable td{padding:16px 12px 16px 0;border-bottom:1px solid var(--rule);vertical-align:middle;font-size:15px}
+.ltable td:first-child{color:var(--muted);font-size:14px}
+.ltable q{quotes:none;font-size:18px;letter-spacing:-.01em;color:var(--ink)}
+.ltable .num{font-weight:600}
+.ltable td.cat{display:table-cell}.ltable td.cat span{display:inline-flex;align-items:center;gap:6px}
+.ltable col.c1{width:110px}.ltable col.c2{width:36%}.ltable col.c3{width:13%}
+@media(max-width:820px){
+  .ltable thead{display:none}.ltable,.ltable tbody,.ltable tr{display:block}
+  .ltable tr{display:grid;grid-template-columns:repeat(3,auto) 1fr;gap:6px 16px;padding:16px 0;border-bottom:1px solid var(--rule)}
+  .ltable td{border:0;padding:0}.ltable td:first-child{grid-column:1/-1}.ltable td:nth-child(2){grid-column:1/-1;padding-bottom:4px}
+}
+
+/* =====================================================================
+   GET IT
+   ===================================================================== */
+.get{background:var(--copper);color:#fff;padding:clamp(80px,9vw,120px) 0}
+.get .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,320px);gap:48px;align-items:center}
+.get h2{max-width:12ch}
+.get .sub{color:rgba(255,255,255,.88)}
+.get .btns{display:flex;flex-direction:column;gap:12px}
+.get .btn{height:56px;font-size:17px;width:100%}
+.get .btn.white{background:#fff;color:var(--ink)}.get .btn.white:hover{background:var(--paper)}
+.get .btn.outline{background:transparent;color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.55)}.get .btn.outline:hover{box-shadow:inset 0 0 0 1.5px #fff}
+@media(max-width:820px){.get .wrap{grid-template-columns:minmax(0,1fr)}}
+
+footer{padding:40px 0 calc(48px + env(safe-area-inset-bottom));color:var(--sage);font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:14px 30px;align-items:center}
+footer a{text-decoration:none}footer a:hover{color:var(--paper)}
+footer .brand{color:var(--paper);font-size:20px;margin-right:auto}footer .brand svg{width:24px;height:24px}
+@media(max-width:600px){footer .brand{flex-basis:100%;margin-bottom:6px}}
+
+/* =====================================================================
+   1.0.7 — hero news pill, trust row, statement scan, health playground, bento, FAQ, reveal
+   ===================================================================== */
+.news{display:inline-flex;align-items:center;gap:10px;margin-bottom:26px;padding:6px 14px 6px 6px;border-radius:999px;background:var(--fir);box-shadow:inset 0 0 0 1px var(--moss);
+  font-size:14px;color:var(--sage);text-decoration:none;transition:box-shadow .2s,color .2s}
+.news:hover{box-shadow:inset 0 0 0 1px var(--copper-hi);color:var(--paper)}
+.news b{padding:3px 10px;border-radius:999px;background:var(--copper);color:#fff;font-size:12px;font-weight:700;letter-spacing:.02em}
+.news .ic{width:16px;height:16px}
+.trust{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:22px;list-style:none;font-size:14px;color:var(--sage)}
+.trust li{display:flex;align-items:center;gap:8px}
+.trust .ic{width:17px;height:17px;color:var(--slice)}
+
+/* hero ambience: a slow warm glow behind the till */
+.hero::before{content:"";position:absolute;inset:-10% -10% 0 45%;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(201,99,47,.20),transparent 70%),radial-gradient(closest-side at 70% 70%,rgba(43,184,154,.12),transparent 70%);filter:blur(10px);animation:glow 14s ease-in-out infinite alternate}
+@keyframes glow{to{transform:translate3d(-4%,3%,0) scale(1.06)}}
+.hero .wrap{position:relative}
+
+/* statements: a scan line sweeps the tidy list */
+.list-clean::before{content:"";position:absolute;left:-8px;right:-8px;height:48px;top:20px;opacity:0;pointer-events:none;z-index:2;
+  background:linear-gradient(180deg,transparent,rgba(201,99,47,.16) 70%,rgba(201,99,47,.55) 96%,transparent);border-radius:8px}
+.scan .list-clean::before{animation:scan 1.1s cubic-bezier(.4,0,.2,1) both}
+@keyframes scan{0%{opacity:1;transform:translateY(0)}90%{opacity:1}100%{opacity:0;transform:translateY(calc(var(--rows,7)*52px))}}
+
+/* ---------- health playground (paper) ---------- */
+.health{padding:var(--sect) 0}
+.hgrid{margin-top:clamp(40px,5vw,64px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(20px,3vw,36px);align-items:stretch}
+.knobs{background:#fff;border-radius:24px;padding:clamp(22px,3vw,34px);box-shadow:0 1px 0 var(--rule),0 24px 50px -30px rgba(20,33,31,.35);display:flex;flex-direction:column;gap:22px}
+.knob-row label{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:15px;color:var(--muted)}
+.knob-row label b{color:var(--ink);font-size:17px;font-weight:650;letter-spacing:-.02em}
+.knob-row input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;margin-top:6px;cursor:pointer;--p:50%}
+.knob-row input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:99px;background:linear-gradient(90deg,var(--copper) var(--p),var(--sand) var(--p))}
+.knob-row input[type=range]::-moz-range-track{height:8px;border-radius:99px;background:linear-gradient(90deg,var(--copper) var(--p),var(--sand) var(--p))}
+.knob-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;margin-top:-9px;border-radius:50%;background:#fff;border:0;box-shadow:0 0 0 1.5px var(--copper),0 4px 10px rgba(20,33,31,.25);transition:transform .15s}
+.knob-row input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:0;box-shadow:0 0 0 1.5px var(--copper),0 4px 10px rgba(20,33,31,.25)}
+.knob-row input[type=range]:active::-webkit-slider-thumb{transform:scale(1.12)}
+.knob-row input[type=range]:focus-visible{outline:none}.knob-row input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px var(--copper-hi),0 4px 10px rgba(20,33,31,.25)}
+.knob-row .kl{font-size:15px;color:var(--muted)}
+.seg{display:flex;gap:4px;padding:4px;margin-top:8px;border-radius:14px;background:var(--sand)}
+.seg button{flex:1;height:40px;border:0;border-radius:10px;background:none;font-size:14px;font-weight:550;color:var(--muted);cursor:pointer;transition:background-color .2s,color .2s,box-shadow .2s}
+.seg button[aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(20,33,31,.15)}
+.tick{display:flex;align-items:center;gap:12px;font-size:15px;color:var(--ink);cursor:pointer}
+.tick input{width:22px;height:22px;accent-color:var(--copper);cursor:pointer}
+.result{position:relative;overflow:hidden;border-radius:24px;padding:clamp(24px,3vw,36px);background:var(--ever);color:var(--paper);display:flex;flex-direction:column;gap:24px;box-shadow:0 30px 60px -28px rgba(16,32,29,.7)}
+.result::before{content:"";position:absolute;width:420px;height:420px;right:-160px;top:-180px;border-radius:50%;background:radial-gradient(closest-side,var(--tone,rgba(43,184,154,.28)),transparent);transition:background .6s;pointer-events:none}
+.rtop{position:relative;display:flex;align-items:center;gap:clamp(18px,3vw,30px)}
+.ring{position:relative;width:148px;height:148px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:12;stroke-linecap:round}
+.ring .bg{stroke:var(--moss)}
+.ring .fg{stroke:var(--ring,var(--slice));transition:stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1),stroke .4s}
+.ring .val{position:absolute;inset:0;display:grid;place-items:center;align-content:center;text-align:center}
+.ring .val b{font-size:46px;font-weight:700;letter-spacing:-.05em;line-height:1}
+.ring .val small{font-size:12px;color:var(--sage);margin-top:4px}
+.tier{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:650;letter-spacing:.02em;background:rgba(255,255,255,.07)}
+.tier i{width:8px;height:8px;border-radius:50%;background:var(--ring,var(--slice))}
+.rtop h3{font-size:clamp(22px,2.2vw,28px);letter-spacing:-.03em;line-height:1.15;margin-top:12px;text-wrap:balance}
+.pills4{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 22px}
+.pills4 div{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:baseline;font-size:14px;color:var(--sage)}
+.pills4 b{color:var(--paper);font-size:15px}
+.pills4 .pb{grid-column:1/-1;height:6px;border-radius:99px;background:var(--moss);overflow:hidden}
+.pills4 .pb i{display:block;height:100%;width:0;border-radius:inherit;background:var(--copper-hi);transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.step{position:relative;padding:16px 18px;border-radius:16px;background:var(--fir);box-shadow:inset 0 0 0 1px var(--moss)}
+.step small{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--copper-hi);font-weight:700;margin-bottom:4px}
+.step p{font-size:16px;line-height:1.5}
+.hfoot{position:relative;font-size:13px;color:var(--sage);margin-top:auto}
+.hfoot a{color:var(--paper)}
+.facts3{position:relative;display:flex;flex-wrap:wrap;gap:8px}
+.facts3 span{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.06);font-size:13px;color:var(--sage)}
+.facts3 b{color:var(--paper);font-weight:600}
+@media(max-width:900px){.hgrid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:480px){.rtop{flex-direction:column;align-items:flex-start}.ring{width:128px;height:128px}.ring .val b{font-size:40px}.pills4{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- bento (replaces the flat list) ---------- */
+.bento{margin-top:clamp(40px,5vw,64px);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.tile{position:relative;overflow:hidden;background:#fff;border-radius:22px;padding:24px 24px 26px;box-shadow:0 1px 0 var(--rule),0 18px 40px -30px rgba(20,33,31,.35);
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s}
+.tile:hover{transform:translateY(-4px);box-shadow:0 1px 0 var(--rule),0 28px 50px -28px rgba(20,33,31,.45)}
+.tile .ic{width:22px;height:22px;color:var(--copper);margin-bottom:12px}
+.tile b{display:block;font-size:18px;letter-spacing:-.02em;margin-bottom:4px}
+.tile p{color:var(--muted);font-size:15px;line-height:1.5}
+.tile.w2{grid-column:span 2}
+.tile.dark{background:var(--ever);color:var(--paper)}.tile.dark p{color:var(--sage)}.tile.dark .ic{color:var(--copper-hi)}
+.tile .viz{margin:6px -6px 18px;height:132px}
+.tile .viz svg{width:100%;height:100%;overflow:visible}
+.fc-line{fill:none;stroke:var(--slice);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:900;stroke-dashoffset:900}
+.fc-area{fill:url(#fcg);opacity:0;transition:opacity 1s .6s}
+.fc-dip{fill:var(--copper-hi);opacity:0;transition:opacity .4s 1.3s}
+.in .fc-line{animation:draw 1.6s cubic-bezier(.4,0,.2,1) .2s forwards}.in .fc-area,.in .fc-dip{opacity:1}
+@keyframes draw{to{stroke-dashoffset:0}}
+.pace{display:flex;flex-direction:column;gap:12px;margin:4px 0 18px}
+.pace div{display:grid;grid-template-columns:96px 1fr auto;gap:12px;align-items:center;font-size:14px}
+.pace span:last-child{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
+.pace .tr{position:relative;height:10px;border-radius:99px;background:var(--sand)}
+.pace .tr i{position:absolute;inset:0 auto 0 0;border-radius:inherit;background:var(--slice);width:0;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.pace .tr i.warn{background:#E0A43A}.pace .tr i.over{background:var(--red)}
+.pace .tr::after{content:"";position:absolute;top:-4px;bottom:-4px;left:var(--today,70%);width:2px;border-radius:2px;background:var(--ink);opacity:.5}
+.bubble{display:inline-block;margin:2px 0 16px;padding:12px 16px;border-radius:18px 18px 18px 6px;background:var(--fir);font-size:15px;line-height:1.4;max-width:100%}
+.bubble.me{background:var(--copper);color:#fff;border-radius:18px 18px 6px 18px;margin-left:auto;display:block;width:fit-content}
+.chat{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+@media(max-width:1000px){.bento{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.bento{grid-template-columns:minmax(0,1fr)}.tile.w2{grid-column:auto}}
+
+/* ---------- FAQ (evergreen) ---------- */
+.faq{padding:var(--sect) 0}
+.faq .sub{color:var(--sage)}
+.qa{margin-top:clamp(36px,4.5vw,56px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 clamp(28px,4vw,56px)}
+.qa details{border-top:1px solid var(--moss)}
+.qa summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:22px 0;cursor:pointer;font-size:18px;font-weight:600;letter-spacing:-.02em}
+.qa summary::-webkit-details-marker{display:none}
+.qa summary::after{content:"";flex:none;width:28px;height:28px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--moss);
+  background:linear-gradient(var(--paper),var(--paper)) center/12px 1.5px no-repeat,linear-gradient(var(--paper),var(--paper)) center/1.5px 12px no-repeat;transition:transform .3s,box-shadow .2s}
+.qa details[open] summary::after{transform:rotate(45deg);box-shadow:inset 0 0 0 1.5px var(--copper-hi)}
+.qa summary:hover::after{box-shadow:inset 0 0 0 1.5px var(--sage)}
+.qa p{padding:0 44px 24px 0;color:var(--sage);font-size:16px;line-height:1.6}
+.qa p a{color:var(--paper)}
+@media(max-width:820px){.qa{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- get it: a torn receipt edge into the copper band ---------- */
+.get{position:relative}
+.get::before{content:"";position:absolute;left:0;right:0;top:-1px;height:16px;
+  background:radial-gradient(circle 9px at 50% 0,var(--edge,var(--ever)) 96%,#0000) 0 0/22px 16px repeat-x}
+.get .ver{margin-top:22px;display:inline-flex;align-items:center;gap:10px;font-size:14px;color:rgba(255,255,255,.9)}
+.get .ver a{color:#fff}
+.get .ver i{width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.25)}
+
+footer .links{display:flex;flex-wrap:wrap;gap:10px 26px}
+footer .made{flex-basis:100%;font-size:13px;color:#71837F;margin-top:6px}
+
+/* ---------- reveal on scroll (only when JS runs) ---------- */
+.js .rv{opacity:0;transform:translateY(26px);transition:opacity .8s cubic-bezier(.2,.8,.2,1),transform .8s cubic-bezier(.2,.8,.2,1)}
+.js .rv.in{opacity:1;transform:none}
+.js .rv.d1{transition-delay:.08s}.js .rv.d2{transition-delay:.16s}.js .rv.d3{transition-delay:.24s}
+
+/* privacy mode on the page */
+body.masked .num{letter-spacing:.08em}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.js .rv{opacity:1;transform:none}.fc-line{stroke-dashoffset:0}.fc-area,.fc-dip{opacity:1}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="mark" viewBox="0 0 100 100"><path d="M50 50 L88.04 37.64 A40 40 0 1 1 50 10 Z" fill="#C9632F"/><path d="M53.53 45.15 L53.53 5.15 A40 40 0 0 1 91.57 32.79 Z" fill="#2BB89A"/></symbol>
+  <symbol id="win" viewBox="0 0 24 24"><path fill="currentColor" d="M3 5.2 10.4 4v7.3H3zm8.4-1.3L21 2.5v8.8h-9.6zM3 12.7h7.4V20L3 18.8zm8.4 0H21v8.8l-9.6-1.4z"/></symbol>
+  <symbol id="gh" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .9.1-.7.4-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2z"/></symbol>
+  <symbol id="discord" viewBox="0 0 24 24"><path fill="currentColor" d="M19.3 5.3A16 16 0 0 0 15.4 4l-.5 1a15 15 0 0 0-5.8 0L8.6 4a16 16 0 0 0-3.9 1.3C2.2 9 1.6 12.6 1.9 16.2a16 16 0 0 0 4.8 2.4l1-1.6a10 10 0 0 1-1.6-.8l.4-.3a11.5 11.5 0 0 0 11 0l.4.3-1.6.8 1 1.6a16 16 0 0 0 4.8-2.4c.4-4.2-.6-7.8-2.8-10.9zM8.7 14c-.9 0-1.7-.9-1.7-2s.8-2 1.7-2 1.7.9 1.7 2-.8 2-1.7 2zm6.6 0c-.9 0-1.7-.9-1.7-2s.8-2 1.7-2 1.7.9 1.7 2-.7 2-1.7 2z"/></symbol>
+  <!-- Penny's own line icons (renderer/icons.js) -->
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3.5l1.8 4.7 4.7 1.8-4.7 1.8L12 16.5l-1.8-4.7L5.5 10l4.7-1.8z"/><path d="M18.5 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><path d="M3.5 4.5h2.2l2 10.2h9.6l1.8-7.4H6.6"/><circle cx="9.5" cy="19" r="1.3"/><circle cx="16.5" cy="19" r="1.3"/></symbol>
+  <symbol id="i-utensils" viewBox="0 0 24 24"><path d="M7 3.5v7.5M4.5 3.5v5a2.5 2.5 0 0 0 5 0v-5M7 11v9.5"/><path d="M17 20.5V3.5c-2.4 1.4-3.5 4-3.5 7H17"/></symbol>
+  <symbol id="i-car" viewBox="0 0 24 24"><path d="M3.5 17v-4.5l2-5.2a1.5 1.5 0 0 1 1.4-1h10.2a1.5 1.5 0 0 1 1.4 1l2 5.2V17z"/><path d="M3.5 12.5h17M6 17v2.5M18 17v2.5"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.5V20h5v-5.5h3V20h5V9.5"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 17.5h6M10 20.5h4"/><path d="M12 3.5a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3.5z"/></symbol>
+  <symbol id="i-pill" viewBox="0 0 24 24"><rect x="3.5" y="8.5" width="17" height="7" rx="3.5" transform="rotate(-45 12 12)"/><path d="M9.5 9.5l5 5"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5.5 8h13l-1 12h-11z"/><path d="M9 10.5V7a3 3 0 0 1 6 0v3.5"/></symbol>
+  <symbol id="i-film" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M8 4.5v15M16 4.5v15M3.5 9H8M3.5 15H8M16 9h4.5M16 15h4.5"/></symbol>
+  <symbol id="i-tv" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="12" rx="2.5"/><path d="M8.5 20.5h7"/></symbol>
+  <symbol id="i-plane" viewBox="0 0 24 24"><path d="M20.5 3.5L3.5 10.5l6.5 3 3 6.5z"/><path d="M10 13.5l10.5-10"/></symbol>
+  <symbol id="i-cap" viewBox="0 0 24 24"><path d="M2.5 9L12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11.2V16c0 1.4 2.5 2.7 5.5 2.7s5.5-1.3 5.5-2.7v-4.8M21.5 9v5"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3.5" y="9" width="17" height="4" rx="1"/><path d="M5 13v7.5h14V13M12 9v11.5"/><path d="M12 9S9 8.5 8 6.8 9 3.8 10.5 4.6 12 9 12 9zM12 9s3-.5 4-2.2-1-3-2.5-2.2S12 9 12 9z"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></symbol>
+  <symbol id="i-briefcase" viewBox="0 0 24 24"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 13h17"/></symbol>
+  <symbol id="i-laptop" viewBox="0 0 24 24"><rect x="5" y="5.5" width="14" height="10" rx="2"/><path d="M3 19h18"/></symbol>
+  <symbol id="i-coins" viewBox="0 0 24 24"><circle cx="9.5" cy="9.5" r="6"/><path d="M15.5 8.5a6 6 0 1 1-6.9 8.2"/></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 4.5 3.5 8 7 11.5M3.5 8h13M17 12.5l3.5 3.5-3.5 3.5M20.5 16h-13"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M3.5 3.5l17 17M10.5 5.6c.5-.1 1-.1 1.5-.1 6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.9 3.7M6.5 6.9C3.9 8.7 2.5 12 2.5 12S6 18.5 12 18.5c1.8 0 3.3-.6 4.6-1.4M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+  <symbol id="i-bank" viewBox="0 0 24 24"><path d="M3.5 9.5 12 4.5l8.5 5zM5.5 10v7M9.8 10v7M14.2 10v7M18.5 10v7M3.5 20h17"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5 19.5 6v5.5c0 4.5-3.2 8-7.5 9-4.3-1-7.5-4.5-7.5-9V6z"/><path d="M8.8 12.2l2.2 2.2 4.3-4.6"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.8"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24"><path d="M3.5 17 9 11.5l4 4 7.5-8"/><path d="M15 7.5h5.5V13"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4.5 5.5h15a1 1 0 0 1 1 1V16a1 1 0 0 1-1 1H10l-4.5 3.5V17h-1a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1z"/></symbol>
+  <symbol id="i-wand" viewBox="0 0 24 24"><path d="M4 20 15 9M14 4v2.5M19.5 9.5H17M18 5.5l-1.8 1.8"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><path d="M18.5 11.5l-6.8 6.8a4.5 4.5 0 0 1-6.4-6.4l7.3-7.3a3 3 0 0 1 4.2 4.2l-7.2 7.2a1.5 1.5 0 0 1-2.1-2.1l6.5-6.5"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M4.5 19.5h15"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5S9.4 5.9 12 3.5z"/></symbol>
+  <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3.5v8"/><path d="M7 6.6a7.5 7.5 0 1 0 10 0"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 44 14"><path d="M1 7h40M35 1.5 41.5 7 35 12.5"/></symbol>
+</svg>
+
+<header class="bar" id="bar">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Penny, back to the top"><svg aria-hidden="true"><use href="#mark"/></svg>penny</a>
+    <nav aria-label="Sections"><a href="#statements">Bank statements</a><a href="#privacy">Privacy</a><a href="#health">Health score</a><a href="#screens">The app</a><a href="#faq">FAQ</a></nav>
+    <a class="btn copper sm" href="#get">Get Penny</a>
+  </div>
+</header>
+
+<main id="top">
+<!-- ===================== hero ===================== -->
+<section class="hero" aria-labelledby="h1">
+  <div class="wrap">
+    <div>
+      <a class="news" href="#health"><b>NEW</b>Version 1.0.7: an honest health score, built by Penny Research<svg class="ic" aria-hidden="true"><use href="#i-next"/></svg></a>
+      <h1 id="h1"><span class="l1">Say what you spent.</span> <span class="l2">Penny keeps the books.</span></h1>
+      <p class="sub">A private budget app for Windows. It understands plain sentences, reads your bank statements and keeps every number on your own PC.</p>
+
+      <div class="say">
+        <form id="sayForm" autocomplete="off">
+          <svg class="ic" aria-hidden="true"><use href="#i-sparkles"/></svg>
+          <label class="sr" for="say">Type a purchase the way you'd say it</label>
+          <input id="say" placeholder="Type something you bought…" maxlength="80" spellcheck="false" enterkeyhint="done">
+          <button type="submit">Print it</button>
+        </form>
+        <div class="read" id="read" aria-live="polite"></div>
+        <div class="tries" aria-label="Examples to try"></div>
+      </div>
+
+      <div class="cta">
+        <a class="btn copper" href="https://apps.microsoft.com/detail/9NZJGZ0X9VDT"><svg aria-hidden="true"><use href="#win"/></svg>Get it from Microsoft</a>
+        <a class="btn ghost" href="https://github.com/abdallhhelles/Penny/releases/latest"><svg aria-hidden="true"><use href="#gh"/></svg>Download for Windows</a>
+        <p>Free during the beta. No account, no bank login, no ads.</p>
+      </div>
+      <ul class="trust" aria-label="Why people trust Penny">
+        <li><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg>Encrypted on your PC</li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-power"/></svg>Works offline</li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>5 languages</li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg>No account, no ads</li>
+      </ul>
+    </div>
+
+    <div class="till" role="region" aria-label="Your receipt">
+      <div class="slot" id="slot" aria-hidden="true"></div>
+      <div class="paper" id="paper">
+        <div class="r-head"><b><svg aria-hidden="true"><use href="#mark"/></svg>penny</b><span id="today"></span></div>
+        <ul class="lines" id="lines" aria-live="polite"></ul>
+        <div class="totals">
+          <span>Spent</span><span class="big num" id="spent"></span>
+          <span>Safe to spend today</span><span class="safe num" id="safe"></span>
+        </div>
+        <p class="r-note">Printed on this device. Nothing leaves it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== bank statements ===================== -->
+<div class="paperband">
+<section class="statements" id="statements" aria-labelledby="h2a">
+  <div class="wrap">
+    <div class="shead rv"><h2 id="h2a">Your bank writes for machines. Penny rewrites it for you.</h2>
+    <p class="sub">Download a statement from your bank's website and drop it into Penny. It recognizes the bank, tidies every payee, files it in the right category, and records card payments as transfers instead of spending.</p></div>
+
+    <div class="compare rv" id="compare">
+      <div class="form" aria-label="Lines as they appear in a bank statement">
+        <span class="t">STATEMENT · CHECKING ••7731</span>
+        <div id="rawRows"></div>
+      </div>
+      <div class="arrows" aria-hidden="true" id="arrows"></div>
+      <div class="list-clean" aria-label="The same lines in Penny">
+        <span class="t">In Penny</span>
+        <div id="cleanRows"></div>
+      </div>
+    </div>
+
+    <div class="tidy-act">
+      <button class="btn copper" id="tidyBtn" type="button" aria-controls="compare">Tidy it up</button>
+      <label class="own">
+        <span class="sr">Paste a line from your own statement</span>
+        <input id="own" placeholder="Or paste a line from your own statement" spellcheck="false" maxlength="140">
+        <output id="ownOut" for="own"></output>
+      </label>
+    </div>
+    <p class="banks">Recognized automatically: <b>Chase, Bank of America, Wells Fargo, Capital One, Citi, American Express, Discover, Apple Card, U.S. Bank</b> and <b>Ally</b>, plus <b>Mint, YNAB</b> and <b>Monarch</b> exports. Any other CSV, OFX or QFX file works too.</p>
+  </div>
+</section>
+</div>
+
+<!-- ===================== privacy ===================== -->
+<section class="priv" id="privacy" aria-labelledby="h2b">
+  <div class="wrap">
+    <div class="top rv">
+      <div>
+        <h2 id="h2b">Nobody sees your money. Not even us.</h2>
+        <p class="sub">Penny never asks for your bank password and has no servers to send your data to. Privacy mode hides every number at once. Try it on this page.</p>
+      </div>
+      <button class="switch" id="privSwitch" role="switch" aria-checked="false" type="button">
+        <span class="track"><span class="knob"><svg class="ic on" aria-hidden="true"><use href="#i-eye"/></svg><svg class="ic off" aria-hidden="true"><use href="#i-eyeoff"/></svg></span></span>
+        <span><b>Privacy mode</b><small id="privState">Numbers are showing</small></span>
+      </button>
+    </div>
+    <div class="facts rv d1">
+      <div><svg class="ic" aria-hidden="true"><use href="#i-bank"/></svg><b>No bank login</b><p>Penny reads the files you download yourself. It never connects to your bank.</p></div>
+      <div><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg><b>Encrypted on your PC</b><p>AES-256, tied to your Windows account. Add a passcode and a recovery key for a second lock.</p></div>
+      <div><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg><b>Backed up for you</b><p>Verified backups every day and before big changes, so a bad import is one click to undo.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== health score playground ===================== -->
+<div class="paperband">
+<section class="health" id="health" aria-labelledby="h2h">
+  <div class="wrap">
+    <div class="shead rv"><h2 id="h2h">A health score that's honest with you.</h2>
+    <p class="sub">The Penny Research team checked every benchmark against the latest household-finance research. Move the sliders: this is the same model the app uses, running in your browser. Nothing you set here leaves the page.</p></div>
+
+    <div class="hgrid">
+      <form class="knobs rv d1" id="knobs" onsubmit="return false" aria-label="Your numbers">
+        <div class="knob-row"><label for="k_inc">Take-home pay a month <b class="num" id="v_inc"></b></label><input type="range" id="k_inc" min="1000" max="12000" step="100" value="4000"></div>
+        <div class="knob-row"><label for="k_spend">Spending a month <b class="num" id="v_spend"></b></label><input type="range" id="k_spend" min="500" max="12000" step="100" value="3500"></div>
+        <div class="knob-row"><label for="k_cash">Cash you can reach <b class="num" id="v_cash"></b></label><input type="range" id="k_cash" min="0" max="40000" step="250" value="3000"></div>
+        <div class="knob-row"><label for="k_debt">Card and loan debt <b class="num" id="v_debt"></b></label><input type="range" id="k_debt" min="0" max="30000" step="250" value="2500"></div>
+        <div class="knob-row"><div class="kl" id="payLbl">How steady is your pay?</div>
+          <div class="seg" role="group" aria-labelledby="payLbl"><button type="button" data-pay="steady" aria-pressed="true">Steady</button><button type="button" data-pay="varies" aria-pressed="false">Varies</button><button type="button" data-pay="irregular" aria-pressed="false">Irregular</button></div></div>
+        <label class="tick"><input type="checkbox" id="k_bud" checked>I plan my spending with budgets</label>
+      </form>
+
+      <div class="result rv d2" aria-live="polite">
+        <div class="rtop">
+          <div class="ring"><svg viewBox="0 0 148 148" aria-hidden="true"><circle class="bg" cx="74" cy="74" r="62"/><circle class="fg" id="ringFg" cx="74" cy="74" r="62" stroke-dasharray="389.6" stroke-dashoffset="389.6"/></svg>
+            <div class="val"><b class="num" id="score">–</b><small>out of 100</small></div></div>
+          <div><span class="tier" id="tier"><i></i><span></span></span><h3 id="verdict"></h3></div>
+        </div>
+        <div class="pills4" id="pillars"></div>
+        <div class="facts3" id="hfacts"></div>
+        <div class="step"><small>Your next step</small><p id="nextStep"></p></div>
+        <p class="hfoot">Penny Research model, edition 2026.10. 80 and above is healthy, 40 to 79 is coping, below 40 is vulnerable. Guidance, not financial advice. <a href="https://github.com/abdallhhelles/Penny/blob/main/docs/RESEARCH.md">How it works</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ===================== the app ===================== -->
+<section class="screens" id="screens" aria-labelledby="h2c">
+  <div class="wrap head rv">
+    <h2 id="h2c">One look at today. The rest when you want it.</h2>
+    <div class="strip-nav"><button type="button" id="prevShot" aria-label="Previous screen"><svg class="ic"><use href="#i-prev"/></svg></button><button type="button" id="nextShot" aria-label="Next screen"><svg class="ic"><use href="#i-next"/></svg></button></div>
+  </div>
+  <div class="strip" id="strip" tabindex="0" aria-label="Screens from Penny, scroll sideways"></div>
+  <div class="dots" id="dots" aria-label="Choose a screen"></div>
+</section>
+
+<!-- ===================== everything else ===================== -->
+<div class="paperband">
+<section class="more" aria-labelledby="h2d">
+  <div class="wrap">
+    <div class="shead rv"><h2 id="h2d">And the rest of it.</h2><p class="sub">The everyday tools, all on your PC and all included.</p></div>
+    <div class="bento">
+      <div class="tile w2 dark rv" id="fcTile"><svg class="ic" aria-hidden="true"><use href="#i-trend"/></svg><b>The next 60 days, forecast</b>
+        <div class="viz" aria-hidden="true"><svg viewBox="0 0 520 132" preserveAspectRatio="none"><defs><linearGradient id="fcg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2BB89A" stop-opacity=".35"/><stop offset="1" stop-color="#2BB89A" stop-opacity="0"/></linearGradient></defs>
+          <path class="fc-area" d="M4 52 C60 54 90 58 120 60 S150 104 170 106 S196 30 214 30 C260 32 300 40 340 44 S372 78 388 80 S410 26 430 24 C470 26 500 30 516 32 L516 132 L4 132Z"/>
+          <path class="fc-line" d="M4 52 C60 54 90 58 120 60 S150 104 170 106 S196 30 214 30 C260 32 300 40 340 44 S372 78 388 80 S410 26 430 24 C470 26 500 30 516 32"/>
+          <circle class="fc-dip" cx="170" cy="106" r="7"/></svg></div>
+        <p>Your balance ahead of time, with the low point marked before it happens.</p></div>
+      <div class="tile w2 rv d1" id="paceTile"><svg class="ic" aria-hidden="true"><use href="#i-target"/></svg><b>Budgets that warn early</b>
+        <div class="pace" aria-hidden="true">
+          <div><span>Groceries</span><span class="tr"><i data-w="58"></i></span><span>$261</span></div>
+          <div><span>Dining</span><span class="tr"><i class="warn" data-w="86"></i></span><span>$189</span></div>
+          <div><span>Shopping</span><span class="tr"><i class="over" data-w="100"></i></span><span>$214</span></div>
+        </div>
+        <p>The line is today. Each bar is how far through its budget a category is, so you see the pace before you overspend.</p></div>
+      <div class="tile w2 dark rv"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><b>Ask Penny</b>
+        <div class="chat" aria-hidden="true"><span class="bubble me">How much did I spend on dining last month?</span><span class="bubble"><span class="num">$291.66</span> across 14 visits. That's <span class="num">$71.66</span> over your budget.</span></div>
+        <p>Plain questions, answered on your PC in a moment.</p></div>
+      <div class="tile rv d1"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg><b>Bills on one calendar</b><p>Rent, subscriptions and paydays, with Windows reminders even when Penny is in the tray.</p></div>
+      <div class="tile rv d2"><svg class="ic" aria-hidden="true"><use href="#i-coins"/></svg><b>Goals and debt plans</b><p>What to set aside each month, and your debt-free month with avalanche or snowball.</p></div>
+      <div class="tile rv"><svg class="ic" aria-hidden="true"><use href="#i-wand"/></svg><b>Rules that learn</b><p>File a payee once and Penny remembers it next time.</p></div>
+      <div class="tile rv d1"><svg class="ic" aria-hidden="true"><use href="#i-clip"/></svg><b>Receipts attached</b><p>Photos and PDFs kept with their transaction, encrypted.</p></div>
+      <div class="tile rv d2"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg><b>Excel export</b><p>Real dates and amounts, plus totals by category.</p></div>
+      <div class="tile rv d3"><svg class="ic" aria-hidden="true"><use href="#i-power"/></svg><b>A desktop widget</b><p>Today's numbers and a quick-add box, without opening the app.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== languages ===================== -->
+<section class="langs-s" id="languages" aria-labelledby="h2e">
+  <div class="wrap">
+    <div class="shead rv"><h2 id="h2e">Five languages. One way of reading.</h2>
+    <p class="sub">Penny speaks English, Español, 简体中文, हिन्दी and العربية. Every row below is read live by the same code that prints your receipt.</p></div>
+    <table class="ltable rv">
+      <colgroup><col class="c1"><col class="c2"><col class="c3"><col><col><col></colgroup>
+      <thead><tr><th>Language</th><th>You type</th><th>Amount</th><th>Payee</th><th>Category</th><th>When</th></tr></thead>
+      <tbody id="langs"></tbody>
+    </table>
+  </div>
+</section>
+</div>
+
+<!-- ===================== FAQ ===================== -->
+<section class="faq" id="faq" aria-labelledby="h2g">
+  <div class="wrap">
+    <div class="shead rv"><h2 id="h2g">Questions, answered.</h2><p class="sub">The things people ask before they install a money app. Short answers, no fine print.</p></div>
+    <div class="qa">
+      <div>
+        <details class="rv"><summary>Does Penny connect to my bank?</summary><p>No. Penny never asks for a bank password and never logs in anywhere. You download a statement (CSV, OFX or QFX) from your bank's website and drop it in. Major US banks are recognized automatically.</p></details>
+        <details class="rv"><summary>Where is my data, and who can see it?</summary><p>Only on your PC, encrypted with AES-256 and tied to your Windows account. There is no account and no cloud, and Penny has no servers. Add a passcode for a second lock, with a recovery key in case you forget it.</p></details>
+        <details class="rv"><summary>Is it really free?</summary><p>Yes, everything is free during the beta. A Pro plan will add extras later; everyday budgeting stays free, and data you already have is never removed or locked away.</p></details>
+      </div>
+      <div>
+        <details class="rv"><summary>How is the health score worked out?</summary><p>Four pillars (Spend, Save, Borrow, Plan) scored 0 to 100 with the Penny Research model, built from the latest household-finance research and tested on realistic households. <a href="https://github.com/abdallhhelles/Penny/blob/main/docs/RESEARCH.md">Read the method</a>.</p></details>
+        <details class="rv"><summary>What if I already use Mint, YNAB or Monarch?</summary><p>Export from your old app and import the file. Penny recognizes those exports with all their accounts, keeps transfers as transfers and skips duplicates.</p></details>
+        <details class="rv"><summary>Mac, Linux or phone?</summary><p>Penny is for Windows 10 and 11 today. The money engine is already shared code, which is the groundwork for a phone version. Join the Discord to hear first.</p></details>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== get it ===================== -->
+<section class="get" id="get" aria-labelledby="h2f">
+  <div class="wrap">
+    <div class="rv">
+      <h2 id="h2f">Start with the next thing you buy.</h2>
+      <p class="sub">Penny is free during the beta, for Windows 10 and 11.</p>
+      <p class="ver"><i></i>Version 1.0.8 · <a href="https://github.com/abdallhhelles/Penny/releases/latest">What's new</a></p>
+    </div>
+    <div class="btns rv d1">
+      <a class="btn white" href="https://apps.microsoft.com/detail/9NZJGZ0X9VDT"><svg aria-hidden="true"><use href="#win"/></svg>Get it from Microsoft</a>
+      <a class="btn outline" href="https://github.com/abdallhhelles/Penny/releases/latest"><svg aria-hidden="true"><use href="#gh"/></svg>Download from GitHub</a>
+      <a class="btn outline" href="https://discord.gg/r5kNGC6p29"><svg aria-hidden="true"><use href="#discord"/></svg>Join the Discord</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Penny, back to the top"><svg aria-hidden="true"><use href="#mark"/></svg>penny</a>
+    <nav class="links" aria-label="More">
+      <a href="https://github.com/abdallhhelles/Penny/blob/main/CHANGELOG.md">What's new</a>
+      <a href="https://github.com/abdallhhelles/Penny/blob/main/docs/RESEARCH.md">Penny Research</a>
+      <a href="https://github.com/abdallhhelles/Penny/blob/main/docs/SECURITY.md">Security</a>
+      <a href="https://github.com/abdallhhelles/Penny/blob/main/installer/PRIVACY.txt">Privacy notice</a>
+      <a href="https://github.com/abdallhhelles/Penny/releases">All releases</a>
+      <a href="https://github.com/abdallhhelles/Penny/issues">Support</a>
+      <a href="https://discord.gg/r5kNGC6p29">Discord</a>
+    </nav>
+    <p class="made">© <span id="yr"></span> Akrot Software. This page has no trackers, no cookies and no analytics, just like the app.</p>
+  </div>
+</footer>
+
+<script src="penny-core.js"></script>
+<script>
+'use strict';
+(() => {
+  const C = window.PennyCore, $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const pad = n => String(n).padStart(2, '0');
+  const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const TODAY = ymd(new Date());
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const icon = n => `<svg class="ic" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+  let masked = false;   // privacy mode: amounts are replaced, not blurred (exactly like the app)
+  const USD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+  const money = n => masked ? '•••' : USD.format(n);
+  const asDate = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+  const shortFmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
+  const rel = s => { const diff = Math.round((asDate(TODAY) - asDate(s)) / 864e5); return diff === 0 ? 'Today' : diff === 1 ? 'Yesterday' : diff > 1 && diff < 7 ? `${diff} days ago` : shortFmt.format(asDate(s)); };
+  $('#today').textContent = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(new Date());
+  $('#yr').textContent = new Date().getFullYear();
+
+  /* Penny's default categories (same ids and icons as the app) */
+  const CATS = [['Groceries', 'cart'], ['Dining', 'utensils'], ['Transport', 'car'], ['Housing', 'home'], ['Utilities', 'bulb'], ['Health', 'pill'], ['Shopping', 'bag'],
+    ['Entertainment', 'film'], ['Subscriptions', 'tv'], ['Travel', 'plane'], ['Education', 'cap'], ['Gifts', 'gift'], ['Other', 'grid'],
+    ['Salary', 'briefcase', 1], ['Freelance', 'laptop', 1], ['Other income', 'coins', 1]]
+    .map(([name, ic, inc]) => ({ id: 'c_' + name.toLowerCase().replace(/\W+/g, '_'), name, ic, type: inc ? 'income' : 'expense' }));
+  const catOf = id => CATS.find(c => c.id === id);
+  const guess = (t, type) => C.RulesEngine.keyword(t, type, CATS);
+  const parse = text => {
+    if (!C) return null;
+    const r = C.Smart.parseSmart(text, { today: TODAY, guessCategory: guess });
+    if (!r) return null;
+    r.cat = catOf(r.category) || (r.type === 'income' ? catOf('c_other_income') : catOf('c_other'));
+    return r;
+  };
+
+  /* ============ the receipt ============ */
+  const DAY_BUDGET = 96, MAX_LINES = 5;
+  const lines = [];
+  const lineHtml = (r, fresh) => `<li class="line${fresh ? ' new' : ''}"><i>${icon(r.cat.ic)}</i>
+    <span><b>${esc(r.merchant || r.cat.name)}</b><small>${esc(r.cat.name)} · ${rel(r.date)}</small></span>
+    <span class="amt num${r.type === 'income' ? ' in' : ''}">${masked ? '•••' : (r.type === 'income' ? '+' : '−') + USD.format(r.amount || 0)}</span></li>`;
+  const drawReceipt = fresh => {
+    const shown = lines.slice(-MAX_LINES);
+    $('#lines').innerHTML = shown.map((r, i) => lineHtml(r, fresh && i === shown.length - 1)).join('');
+    const spentToday = lines.filter(r => r.type === 'expense' && r.date === TODAY).reduce((s, r) => s + (r.amount || 0), 0);
+    const spent = lines.filter(r => r.type === 'expense').reduce((s, r) => s + (r.amount || 0), 0);
+    $('#spent').textContent = money(spent);
+    const left = DAY_BUDGET - spentToday, safe = $('#safe');
+    safe.textContent = money(Math.max(0, left)); safe.classList.toggle('low', left < 0);
+  };
+  const print = r => {
+    lines.push(r); drawReceipt(!reduce);
+    if (reduce) return;
+    const p = $('#paper'), s = $('#slot');
+    p.classList.remove('feed'); s.classList.remove('busy'); void p.offsetWidth; p.classList.add('feed'); s.classList.add('busy');
+  };
+  ['groceries 62.18 at Trader Joe\'s', 'uber 18.40 yesterday'].forEach(t => { const r = parse(t); if (r) lines.push(r); });
+  drawReceipt(false);
+
+  /* ============ say it ============ */
+  const input = $('#say'), read = $('#read');
+  const HINT = 'Penny reads it as you type. This is its real parser, running in your browser.';
+  const preview = () => {
+    const v = input.value.trim(), r = v ? parse(v) : null;
+    if (!r || !(r.amount > 0)) { read.innerHTML = `<span class="hint">${v ? 'Add an amount, like "lunch 12.80".' : HINT}</span>`; return; }
+    read.innerHTML = [['Amount', `<span class="num">${money(r.amount)}</span>`], [r.type === 'income' ? 'From' : 'Payee', `<span>${esc(r.merchant || '–')}</span>`],
+      ['Category', `<span>${icon(r.cat.ic)}${esc(r.cat.name)}</span>`], ['When', `<span>${rel(r.date)}</span>`]]
+      .map(([k, v]) => `<div class="k"><small>${k}</small>${v}</div>`).join('');
+  };
+  let demo = null;   // the one orchestrated moment: Penny types a first example by itself
+  const stopDemo = () => { if (demo) { clearTimeout(demo); demo = null; } };
+  input.addEventListener('input', () => { stopDemo(); preview(); });
+  input.addEventListener('focus', stopDemo);
+  $('#sayForm').addEventListener('submit', e => {
+    e.preventDefault(); stopDemo();
+    const r = parse(input.value);
+    if (!r || !(r.amount > 0)) { input.focus(); read.innerHTML = '<span class="hint">Add an amount, like "lunch 12.80".</span>'; return; }
+    print(r); input.value = ''; preview();
+  });
+  const EX = ['lunch 12.80 at Chipotle', '+2400 salary', 'netflix 15.49', 'gas 41.20 at Shell'];
+  $('.tries').innerHTML = EX.map(t => `<button type="button">${esc(t)}</button>`).join('');
+  $$('.tries button').forEach(b => b.addEventListener('click', () => { stopDemo(); input.value = b.textContent; preview(); input.focus(); }));
+  preview();
+  if (!reduce) {
+    const text = 'coffee 4.50 at Starbucks', step = i => {
+      if (i <= text.length) { input.value = text.slice(0, i); preview(); demo = setTimeout(() => step(i + 1), i ? 55 : 900); }
+      else demo = setTimeout(() => { const r = parse(input.value); if (r) print(r); input.value = ''; preview(); demo = null; }, 700);
+    };
+    step(0);
+  } else { const r = parse('coffee 4.50 at Starbucks'); if (r) { lines.push(r); drawReceipt(false); } }
+
+  /* ============ bank statements ============ */
+  const RAW = [['SQ *BLUE BOTTLE COFFEE 0123 OAKLAND CA', 6.25], ['AMZN Mktp US*2K4L19ZQ0', 34.99], ['TRADER JOE S #552 SAN JOSE CA', 62.18],
+    ['PURCHASE AUTHORIZED ON 10/08 CHIPOTLE 1234 AUSTIN TX', 12.80], ['NETFLIX.COM 866-579-7172 CA', 15.49], ['SHELL OIL 57444 DALLAS TX', 41.20], ['UBER *TRIP HELP.UBER.COM', 18.40]];
+  const tidyName = r => C ? C.Importers.cleanPayee(r) : r;
+  const drawStatements = () => {
+    $('#rawRows').innerHTML = RAW.map(([r, a]) => `<div class="row"><span title="${esc(r)}">${esc(r)}</span><span class="num">${masked ? '•••' : '-' + a.toFixed(2)}</span></div>`).join('');
+    $('#arrows').innerHTML = RAW.map(() => `<i><svg viewBox="0 0 44 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg></i>`).join('');
+    $('#cleanRows').innerHTML = RAW.map(([r, a]) => { const n = tidyName(r), c = catOf(guess(n + ' ' + r, 'expense')) || catOf('c_other');
+      return `<div class="row"><i>${icon(c.ic)}</i><b>${esc(n)}<small>${esc(c.name)}</small></b><span class="amt num">${money(a)}</span></div>`; }).join('');
+  };
+  drawStatements();
+  const compare = $('#compare'), tb = $('#tidyBtn');
+  tb.addEventListener('click', () => {
+    const on = !compare.classList.contains('tidied'); compare.classList.toggle('tidied', on);
+    tb.textContent = on ? 'Show the bank\'s version' : 'Tidy it up'; tb.setAttribute('aria-pressed', String(on));
+  });
+  const own = $('#own'), out = $('#ownOut');
+  own.addEventListener('input', () => {
+    const v = own.value.trim(); if (!v || !C) { out.textContent = ''; return; }
+    const n = tidyName(v), c = catOf(guess(n + ' ' + v, 'expense'));
+    out.textContent = c ? `${n} · ${c.name}` : n;
+  });
+
+  /* ============ privacy mode for the whole page ============ */
+  const sw = $('#privSwitch');
+  sw.addEventListener('click', () => {
+    masked = sw.getAttribute('aria-checked') !== 'true';
+    sw.setAttribute('aria-checked', String(masked)); document.body.classList.toggle('masked', masked);
+    $('#privState').textContent = masked ? 'Every number on this page is hidden' : 'Numbers are showing';
+    drawReceipt(false); preview(); drawStatements(); drawLangs(); if (window.__drawHealth) window.__drawHealth();
+  });
+
+  /* ============ languages ============ */
+  const LANGS = [['English', 'en', 'coffee 4.50 at Starbucks yesterday'], ['Español', 'es', 'café 4,50 en Starbucks ayer'], ['简体中文', 'zh', '昨天在星巴克咖啡 4.50'],
+    ['हिन्दी', 'hi', 'कल Starbucks पर कॉफ़ी 4.50'], ['العربية', 'ar', 'قهوة ٤٫٥٠ في ستاربكس أمس']];
+  const drawLangs = () => {
+    $('#langs').innerHTML = LANGS.map(([name, code, s]) => {
+      const r = parse(s); if (!r) return '';
+      return `<tr><td>${name}</td><td><q lang="${code}" dir="auto">${esc(s)}</q></td><td class="num">${money(r.amount)}</td><td><bdi>${esc(r.merchant)}</bdi></td><td class="cat"><span>${icon(r.cat.ic)}${esc(r.cat.name)}</span></td><td>${rel(r.date)}</td></tr>`;
+    }).join('');
+  };
+  drawLangs();
+
+  /* ============ the app, in a window ============ */
+  const SHOTS = [['01-overview', 'Overview', 'What\'s safe to spend today after upcoming bills, your net worth, budgets and goals.'],
+    ['02-type-it', 'Type it', 'One line fills in the amount, payee, category and date.'],
+    ['03-bank-import', 'Import', 'A Chase card file, recognized and tidied before anything is saved.'],
+    ['04-desktop-widget', 'Desktop widget', 'Today\'s numbers and a quick-add box, always on your desktop.'],
+    ['05-budgets', 'Budgets', 'A warning before you overspend, not after.'],
+    ['08-health-report', 'Health report', 'Your numbers against Penny Research benchmarks, with a short plan.'],
+    ['09-calendar', 'Calendar', 'Spending, income and every bill on one month.'],
+    ['07-achievements', 'Habits', 'Streaks and 24 badges for the good stuff, never shared.']];
+  const strip = $('#strip');
+  strip.innerHTML = SHOTS.map(([f, t, d], i) => `<figure class="shot" id="s${i}"><div class="win"><div class="tb"><svg aria-hidden="true"><use href="#mark"/></svg>Penny<span class="ctl" aria-hidden="true"><span><svg viewBox="0 0 10 10"><path d="M0 5h10"/></svg></span><span><svg viewBox="0 0 10 10"><rect x=".5" y=".5" width="9" height="9"/></svg></span><span><svg viewBox="0 0 10 10"><path d="M0 0l10 10M10 0 0 10"/></svg></span></span></div>
+    <img src="img/${f}.webp" alt="Penny: ${esc(t)}. ${esc(d)}" loading="${i < 2 ? 'eager' : 'lazy'}" width="1600" height="900"></div><figcaption><b>${esc(t)}.</b> ${esc(d)}</figcaption></figure>`).join('');
+  const dots = $('#dots');
+  dots.innerHTML = SHOTS.map(([, t], i) => `<button type="button" aria-label="${esc(t)}" data-i="${i}"></button>`).join('');
+  const shots = $$('.shot');
+  const go = i => { const s = shots[Math.max(0, Math.min(shots.length - 1, i))]; strip.scrollTo({ left: s.offsetLeft - strip.offsetLeft - parseFloat(getComputedStyle(strip).paddingLeft), behavior: reduce ? 'auto' : 'smooth' }); };
+  const current = () => { const x = strip.scrollLeft; let best = 0, d = Infinity; shots.forEach((s, i) => { const dd = Math.abs(s.offsetLeft - strip.offsetLeft - parseFloat(getComputedStyle(strip).paddingLeft) - x); if (dd < d) { d = dd; best = i; } }); return best; };
+  const sync = () => { const c = current(); $$('#dots button').forEach((b, i) => b.setAttribute('aria-current', String(i === c)));
+    $('#prevShot').disabled = c === 0; $('#nextShot').disabled = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 4; };
+  $('#prevShot').addEventListener('click', () => go(current() - 1));
+  $('#nextShot').addEventListener('click', () => go(current() + 1));
+  dots.addEventListener('click', e => { const b = e.target.closest('button'); if (b) go(+b.dataset.i); });
+  strip.addEventListener('scroll', () => requestAnimationFrame(sync), { passive: true });
+  strip.addEventListener('keydown', e => { if (e.key === 'ArrowRight') { e.preventDefault(); go(current() + 1); } if (e.key === 'ArrowLeft') { e.preventDefault(); go(current() - 1); } });
+  addEventListener('resize', sync); sync();
+
+  /* ============ health score playground: the app's own Penny Research model ============ */
+  const H = (() => {
+    const L = C && C.Ledger;
+    if (!L || !L.pillars) return null;
+    const pd2 = n => String(n).padStart(2, '0');
+    const SWING = { steady: [0, 0, 0, 0, 0, 0], varies: [.15, -.12, .08, -.15, .12, -.08], irregular: [.45, -.35, .25, -.4, .5, -.45] };
+    /* six months of history for one household, built from the sliders, scored exactly like the Financial Health Report */
+    return o => {
+      const now = new Date(), needs = o.spend * .55, wants = o.spend - needs, tx = []; let n = 0, flow = 0;
+      for (let k = 6; k >= 1; k--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - k, 1), ym = `${d.getFullYear()}-${pd2(d.getMonth() + 1)}`, inc = Math.max(0, o.income * (1 + SWING[o.pay][6 - k]));
+        tx.push({ id: 't' + n++, date: ym + '-01', amount: inc, type: 'income', accountId: 'chk', category: 'c_salary' },
+          { id: 't' + n++, date: ym + '-03', amount: needs * .6, type: 'expense', accountId: 'chk', category: 'c_housing' },
+          { id: 't' + n++, date: ym + '-12', amount: needs * .4, type: 'expense', accountId: 'chk', category: 'c_groceries' },
+          { id: 't' + n++, date: ym + '-18', amount: wants, type: 'expense', accountId: 'chk', category: 'c_dining' });
+        flow += inc - o.spend;
+      }
+      const b = o.budgets, doc = { schema: 3, settings: { currency: 'USD', cycleStart: 1 }, transactions: tx, goals: [], bills: [], reminders: [], snapshots: [],
+        categories: [{ id: 'c_salary', name: 'Salary', type: 'income' }, { id: 'c_housing', name: 'Housing', type: 'expense', bucket: 'needs', budget: b ? needs * .6 : 0 },
+          { id: 'c_groceries', name: 'Groceries', type: 'expense', bucket: 'needs', budget: b ? needs * .4 : 0 }, { id: 'c_dining', name: 'Dining', type: 'expense', bucket: 'wants', budget: b ? wants : 0 }],
+        accounts: [{ id: 'chk', name: 'Checking', type: 'checking', opening: o.cash - flow, currency: 'USD' }]
+          .concat(o.debt > 0 ? [{ id: 'cc', name: 'Card', type: 'credit', opening: -o.debt, apr: 22, minPay: Math.max(25, o.debt * .03), currency: 'USD' }] : []) };
+      const led = L.createLedger({ data: () => doc, version: () => 0, today: () => TODAY });
+      const R = led.reportData({ region: { us: true, usd: true, code: 'US', cur: 'USD' } });
+      return { R, P: L.pillars(R) };
+    };
+  })();
+  const knobs = $('#knobs');
+  if (knobs && H) {
+    const K = { income: '#k_inc', spend: '#k_spend', cash: '#k_cash', debt: '#k_debt' }, state = { pay: 'steady' };
+    const whole = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+    const m0 = n => masked ? '•••' : whole.format(n);
+    const PILL = [['spend', 'Spend'], ['save', 'Save'], ['borrow', 'Borrow'], ['plan', 'Plan']];
+    const TIERS = [[80, 'Financially healthy', '#2BB89A', 'rgba(43,184,154,.30)'], [40, 'Coping', '#EE9A5C', 'rgba(238,154,92,.28)'], [0, 'Vulnerable', '#E5736A', 'rgba(229,115,106,.30)']];
+    let raf = 0, shown = 0;
+    const animateTo = target => {
+      cancelAnimationFrame(raf); const from = shown, t0 = performance.now(), D = reduce ? 0 : 600;
+      const step = t => { const k = D ? Math.min(1, (t - t0) / D) : 1, e = 1 - Math.pow(1 - k, 3); shown = Math.round(from + (target - from) * e);
+        $('#score').textContent = masked ? '••' : shown; if (k < 1) raf = requestAnimationFrame(step); };
+      raf = requestAnimationFrame(step);
+    };
+    const nextStep = (R, P) => {
+      const pl = R.pl, res = R.res, gap = pl.expenses - pl.income;
+      if (gap > 0) return `You spend more than you earn. Trimming ${m0(gap)} a month is the first move; everything else builds on it.`;
+      if (res.starterGap > 0) return `Build a starter cushion: ${m0(res.starterGap)} more reaches six weeks of take-home pay, enough for most surprises.`;
+      if (R.debts.length) return `Pay down the card at 22%: every ${m0(1000)} cleared saves about ${m0(220)} a year in interest.`;
+      if (pl.savingsRate < .15) return `Lift your savings rate to 15%: about ${m0(pl.income * .15 - (pl.income - pl.expenses))} more a month.`;
+      if (res.months < res.target) return `Grow your cushion to ${res.target} months of essentials: ${m0(res.gap)} to go.`;
+      if (P.plan != null && P.plan < 70) return 'Plan ahead: give your money a job with budgets and a dated goal.';
+      return 'You are in great shape. Keep saving, and compare investing against any debt you take on.';
+    };
+    const draw = () => {
+      const o = { income: +$(K.income).value, spend: +$(K.spend).value, cash: +$(K.cash).value, debt: +$(K.debt).value, pay: state.pay, budgets: $('#k_bud').checked };
+      Object.entries(K).forEach(([k, sel]) => { const el = $(sel); el.style.setProperty('--p', ((el.value - el.min) / (el.max - el.min) * 100) + '%'); });
+      $('#v_inc').textContent = m0(o.income); $('#v_spend').textContent = m0(o.spend); $('#v_cash').textContent = m0(o.cash); $('#v_debt').textContent = m0(o.debt);
+      const { R, P } = H(o), total = P.total == null ? 0 : P.total, tier = TIERS.find(([min]) => total >= min);
+      const res = $('.result'); res.style.setProperty('--ring', tier[2]); res.style.setProperty('--tone', tier[3]);
+      $('#ringFg').style.strokeDashoffset = String(389.6 * (1 - total / 100));
+      animateTo(total);
+      $('#tier span').textContent = tier[1];
+      const areas = PILL.filter(([k]) => P[k] != null), best = areas.slice().sort((a, b) => P[b[0]] - P[a[0]])[0], worst = areas.slice().sort((a, b) => P[a[0]] - P[b[0]])[0];
+      $('#verdict').textContent = worst && P[worst[0]] >= 70 ? 'Strong on all four pillars.' : `Strongest at ${best[1]}. Work on ${worst[1]} next.`;
+      $('#pillars').innerHTML = PILL.map(([k, n]) => `<div><span>${n}</span><b class="num">${masked ? '••' : P[k] ?? '–'}</b><span class="pb"><i style="width:${P[k] || 0}%"></i></span></div>`).join('');
+      const pl = R.pl;
+      $('#hfacts').innerHTML = `<span>Saving <b class="num">${masked ? '••' : Math.round((pl.savingsRate || 0) * 100) + '%'}</b> of pay</span><span>Cushion <b class="num">${masked ? '••' : (R.res.months || 0).toFixed(1)}</b> of ${R.res.target} months</span><span>Pay is <b>${R.vol ? { stable: 'steady', variable: 'varied', volatile: 'irregular' }[R.vol.level] : 'new'}</b></span>`;
+      $('#nextStep').textContent = nextStep(R, P);
+    };
+    knobs.addEventListener('input', draw);
+    $$('.seg button').forEach(b => b.addEventListener('click', () => { state.pay = b.dataset.pay; $$('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); draw(); }));
+    draw();
+    window.__drawHealth = draw;
+  } else if (knobs) knobs.closest('.hgrid').hidden = true;
+
+  /* ============ reveal on scroll, bento visuals, auto-tidy ============ */
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return; const t = e.target; t.classList.add('in'); io.unobserve(t);
+    if (t.id === 'paceTile') $$('#paceTile .tr i').forEach(i => { i.style.width = i.dataset.w + '%'; });
+  }), { rootMargin: '0px 0px -12% 0px', threshold: .08 }) : null;
+  $$('.rv').forEach(el => io ? io.observe(el) : el.classList.add('in'));
+  if (!io) $$('#paceTile .tr i').forEach(i => { i.style.width = i.dataset.w + '%'; });
+  window.__rvReady = true;
+  /* the statement tidies itself the first time you scroll to it (the button still flips between the two) */
+  compare.style.setProperty('--rows', RAW.length);
+  const tidyOnce = () => { if (compare.classList.contains('tidied')) return; if (!reduce) { compare.classList.add('scan'); setTimeout(() => compare.classList.remove('scan'), 1200); } tb.click(); };
+  if (io) { const tio = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { tio.disconnect(); setTimeout(tidyOnce, reduce ? 0 : 450); } }, { threshold: .45 }); tio.observe(compare); }
+
+  /* the top bar gets a line once you scroll */
+  const bar = $('#bar'); addEventListener('scroll', () => bar.classList.toggle('scrolled', scrollY > 8), { passive: true });
+})();
+</script>
+</body>
+</html>
