@@ -1,0 +1,9 @@
+# Penny Beta 1.0.7
+
+- **Penny Research: a smarter Financial Health Report.** The Penny Research team checked every benchmark against the latest household-finance research and tested the scoring on realistic households. Your score now means the same as the widely used tiers: 80 and above is financially healthy, 40 to 79 is coping, below 40 is vulnerable.
+- **Fairer scores.** Saving and spending are no longer counted twice, debt is measured against your income (not just the accounts you track), and the long-term outlook now accepts that pensions carry part of retirement. Most people will see a higher, more realistic score.
+- **New measures.** The report now checks whether your bills are paid on time, whether your usual savings cover your dated goals, and how much of your spending is planned with budgets, with a next step for each.
+- **One set of targets everywhere.** The Overview, Report, Insights and every "?" explanation use the same goals: save 15% of income (20% or more is strong), a cash buffer of 3 to 6 months depending on how steady your pay is, and housing at 30% of income or less. Your first milestone is six weeks of take-home pay.
+- **Up-to-date projections.** Long-term projections use 3% growth after inflation, in line with today's market outlooks, and a 3.9% withdrawal rate. You can still choose other values in the report.
+- **Cleaner report.** The source list and numbered citations are gone; each benchmark says what to aim for in plain words. The method is documented on GitHub (docs/RESEARCH.md).
+- Fixes: the cash-flow chart no longer flattens your balance; the Plan page shows the month and year you'll be debt-free and updates as you move the slider; budgets with a negative carry-over show as over budget instead of a negative percentage; calendar amounts read "$57" instead of "$56.9"; the spending heatmap starts on Monday and shows weekdays in your language.
