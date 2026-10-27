@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Penny privacy policy</title>
+<meta name="description" content="How Penny handles your data: everything stays on your device, encrypted. Optional sync keeps only encrypted copies in your own Google Drive.">
+<link rel="canonical" href="https://abdallhhelles.github.io/Penny/privacy.html">
+<link rel="icon" href="img/icon-180.png">
+<meta name="theme-color" content="#10201D">
+<style>
+@font-face{font-family:'Sora';src:url('fonts/sora-latin.woff2') format('woff2');font-weight:100 800;font-display:swap}
+:root{--bg:#FBF6EF;--ink:#1B2B28;--muted:#5B6B67;--line:#E7DFD3;--accent:#B5532A;--card:#FFFFFF}
+@media (prefers-color-scheme:dark){:root{--bg:#10201D;--ink:#F2EDE6;--muted:#9DB0A9;--line:#24362F;--accent:#EE9A5C;--card:#15241F}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Sora,system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:40px 20px 72px}
+a{color:var(--accent)}
+.top{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;text-decoration:none;color:var(--ink);margin-bottom:28px}
+.top img{width:34px;height:34px}
+h1{font-size:clamp(30px,6vw,40px);line-height:1.1;letter-spacing:-1px;margin:0 0 8px}
+.ver{color:var(--muted);margin:0 0 28px}
+.lead{font-size:18px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 20px;margin:0 0 32px}
+h2{font-size:20px;letter-spacing:-.3px;margin:34px 0 8px}
+ul{padding-left:22px}li{margin:4px 0}
+.note{border-left:3px solid var(--accent);padding:2px 0 2px 14px;color:var(--ink)}
+footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<main class="wrap">
+<a class="top" href="./"><img src="img/icon-180.png" alt="">Penny</a>
+<h1>Privacy policy</h1>
+<p class="ver">Version 1.3 · October 2026 · applies to Penny for Windows and Android</p>
+<p class="lead">Your money data stays on your device, encrypted. Penny has no accounts, no servers, no analytics and no advertising. If you turn on Sync, encrypted copies are kept in <b>your own</b> Google Drive, where only your linked devices can read them.</p>
+
+<h2>Who is responsible</h2>
+<p>Akrot Software publishes Penny. Your financial data never reaches Akrot Software. We act as data controller only for what you choose to send us, such as a support message. Contact: <a href="https://github.com/abdallhhelles/Penny/issues">github.com/abdallhhelles/Penny/issues</a> or <a href="https://discord.gg/r5kNGC6p29">Discord</a>.</p>
+
+<h2>What Penny stores, and where</h2>
+<ul>
+<li><b>Your data</b> (accounts, transactions, budgets, goals, bills, rules, reminders, settings and attached receipts) is kept in Penny's private storage on your device: <code>%APPDATA%\Penny</code> on Windows, the app's private folder on Android.</li>
+<li><b>Backups</b>: automatic copies on the same device (the latest 14 daily copies and a copy before bulk changes, imports and upgrades).</li>
+<li><b>Encryption</b>: everything is encrypted with AES-256-GCM. The key is protected by your Windows account (DPAPI) or by Android's Keystore. If you set a passcode, the key is also locked with it, and a recovery key is shown to you once. We never see your passcode or recovery key and cannot recover your data without them.</li>
+<li><b>Diagnostic log</b> (Windows): technical events only, never amounts, payees or notes.</li>
+</ul>
+
+<h2>Optional features that use your device</h2>
+<ul>
+<li><b>Purchases from bank notifications</b> (Android, off until you turn it on): with your permission, Penny checks notifications on your phone for an amount of money. It keeps only the notifications of the apps you pick (your bank and card apps), encrypted on the phone, until you add or skip them. They are never sent anywhere.</li>
+<li><b>Share to Penny</b>, <b>widget</b> and <b>quick tile</b> (Android): text or files you share with Penny are used to fill in a new transaction on your device. The home-screen widget shows only what is safe to spend today (hidden while privacy mode is on or Penny is locked).</li>
+<li><b>Reminders</b> are scheduled with your device's own notification system.</li>
+</ul>
+
+<h2>Sync between your devices (optional)</h2>
+<p>If you turn on Sync and sign in with Google, Penny stores encrypted copies of your data in a hidden app folder in <b>your own Google Drive</b> (the <code>drive.appdata</code> permission). Penny cannot see or change any of your other files.</p>
+<ul>
+<li>Each copy is encrypted on your device before upload, with a sync key that exists only on the devices you link (by scanning a QR code). Google and Akrot Software cannot read it.</li>
+<li>Penny uses your Google account's email address only to show which account Sync uses.</li>
+<li>To stop: Settings › Sync › Stop syncing on this device. To delete the copies: remove Penny's access at <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>, or delete Penny's hidden data in Google Drive (Settings › Manage apps).</li>
+</ul>
+<p class="note">Penny's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. Data from Google APIs is used only to provide Sync to you, is never transferred to others, is never used for advertising, and is never read by people.</p>
+
+<h2>What is sent over the network</h2>
+<ul>
+<li><b>Nothing about you or your money</b> reaches Akrot Software. There are no accounts with us, no analytics, no advertising and no crash reporting, and Penny never asks for bank logins.</li>
+<li><b>Updates</b> (Windows download from GitHub): Penny checks a small version file on GitHub Releases about every six hours. GitHub can see your IP address, as any web server can. You can switch automatic checks off. The Android and Microsoft Store versions update through their stores.</li>
+<li><b>Sync</b>, only if you turn it on: encrypted copies go to your Google Drive, as described above.</li>
+</ul>
+
+<h2>How long data is kept, and deleting it</h2>
+<p>On your device, until you delete it: Settings › Data &amp; backups › Erase everything, or uninstall Penny. Synced copies stay in your Google Drive until you remove them as described above. Support messages are kept only as long as needed to answer you.</p>
+
+<h2>Your rights</h2>
+<p>Because we hold none of your financial data, you can export, correct or erase all of it yourself in the app. For anything we do hold, such as a support message, you can ask us to access, correct or delete it, or complain to your local data-protection authority.</p>
+
+<h2>Children</h2>
+<p>Penny is a general-audience tool and is not directed at children.</p>
+
+<h2>Changes</h2>
+<p>If this policy changes materially, the new version is published here and its version number changes.</p>
+
+<footer>© Akrot Software · <a href="./">Penny</a> · <a href="https://github.com/abdallhhelles/Penny/issues">Support</a></footer>
+</main>
+</body>
+</html>
